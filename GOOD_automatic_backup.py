@@ -21,9 +21,7 @@ SERVICE_ACCOUNT_FILE = "automatic-backup-church-songs-741cba4a6eed.json"
 SCOPES = ["https://www.googleapis.com/auth/drive"]
 
 # === Google Drive Authentication ===
-# When running on GitHub Actions, you can store your credentials JSON as a secret and write it to a file.
 if os.environ.get("GITHUB_ACTIONS"):
-    # Write the service account JSON from the secret to a file
     with open(SERVICE_ACCOUNT_FILE, "w") as f:
         f.write(os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON"))
 credentials = service_account.Credentials.from_service_account_file(
@@ -33,12 +31,10 @@ drive_service = build("drive", "v3", credentials=credentials)
 # === Undetected Chrome Setup ===
 options = uc.ChromeOptions()
 options.add_argument("--start-maximized")
-# When running on GitHub Actions, run headless
 if os.environ.get("GITHUB_ACTIONS"):
     options.add_argument("--headless")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
-
 driver = uc.Chrome(options=options)
 
 def load_cookies():
@@ -52,7 +48,6 @@ def load_cookies():
             cookies = []
         driver.get(MY_SONGS_URL)
         for cookie in cookies:
-            # Remove attributes that might cause errors
             cookie.pop("sameSite", None)
             driver.add_cookie(cookie)
         driver.refresh()
@@ -80,6 +75,7 @@ def load_cookies():
 load_cookies()
 driver.get(MY_SONGS_URL)
 time.sleep(5)
+print("Page title after loading cookies:", driver.title)  # Debug line
 
 def create_timestamped_folder(service, parent_folder_id):
     now = datetime.now().strftime("Backup %Y-%m-%d %H-%M-%S")
@@ -108,6 +104,8 @@ def main():
 
         if not song_links:
             print("No songs found. Verify you're logged in and on the 'My Songs' page.")
+            driver.save_screenshot("debug_screenshot.png")
+            print("Debug screenshot saved as debug_screenshot.png")
             driver.quit()
             return
 
