@@ -26,13 +26,23 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run backup script
+        id: run_backup
         env:
           CHORDS_AND_TABS_COOKIES: ${{ secrets.CHORDS_AND_TABS_COOKIES }}
           GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
         run: python GOOD_automatic_backup.py
 
+      - name: Check for debug screenshot
+        id: check_debug
+        run: |
+          if [ -f debug_screenshot.png ]; then
+              echo "found=true" >> $GITHUB_OUTPUT;
+          else
+              echo "found=false" >> $GITHUB_OUTPUT;
+          fi
+
       - name: Upload debug screenshot
-        if: exists('debug_screenshot.png')
+        if: steps.check_debug.outputs.found == 'true'
         uses: actions/upload-artifact@v3
         with:
           name: debug_screenshot
