@@ -1,0 +1,33 @@
+name: Backup Songs
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install undetected-chromedriver selenium google-api-python-client google-auth google-auth-oauthlib
+
+      - name: Run backup script
+        env:
+          CHORDS_AND_TABS_COOKIES: ${{ secrets.CHORDS_AND_TABS_COOKIES }}
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+        run: python GOOD_automatic_backup.py
+
